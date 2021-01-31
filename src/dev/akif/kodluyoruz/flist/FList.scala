@@ -30,7 +30,11 @@ sealed trait FList[+A] {
    *
    * @return A new FList by prepending given element to this FList
    */
-  def prepend[AA >: A](element: AA): FList[AA] = ???
+  def prepend[AA >: A](element: AA): FList[AA] = 
+    this match {
+      case FNil => FNonNil(element, FNil)
+      case FNonNil(_, _) => FNonNil(element, this)
+    }
 
   /**
    * Concatenates given FList to this one
@@ -41,7 +45,11 @@ sealed trait FList[+A] {
    *
    * @return A new FList by concatenating given FList to this one
    */
-  def concat[AA >: A](that: FList[AA]): FList[AA] = ???
+  def concat[AA >: A](that: FList[AA]): FList[AA] = 
+    this match {
+      case FNil => that
+      case FNonNil(head, tail) => FNonNil(head, tail.concat(that))
+    }
 
   /**
    * Creates a new FList by applying given mapper to each element
@@ -54,7 +62,7 @@ sealed trait FList[+A] {
    */
   def map[B](mapper: A => B): FList[B] =
     this match {
-      case FNil                => FNil
+      case FNil => FNil
       case FNonNil(head, tail) => FNonNil(mapper(head), tail.map(mapper))
     }
 
@@ -67,12 +75,20 @@ sealed trait FList[+A] {
    *
    * @return A new FList containing flatMapped elements
    */
-  def flatMap[B](flatMapper: A => FList[B]): FList[B] = ???
+  def flatMap[B](flatMapper: A => FList[B]): FList[B] = 
+    this match {
+      case FNil => FNil
+      case FNonNil(head, tail) => FNonNil(mapper(head), tail.map(mapper))
+    }
 
   /**
    * Size of this FList
    */
-  val size: Int = ???
+  val size: Int = 
+    this match {
+      case FNil => 0
+      case FNonNil(head, tail) => tail.size + 1
+    }
 
   /**
    * Whether or not this FList is empty
@@ -99,7 +115,11 @@ sealed trait FList[+A] {
    *
    * @return Produced result by folding over this FList
    */
-  def fold[B](initial: B)(step: (B, A) => B): B = ???
+  def fold[B](initial: B)(step: (B, A) => B): B = 
+    this match {
+      case FNil => initial
+      case FNonNil(head, tail) => tail.fold(step(initial, head))(step)
+    }
 
   /**
    * Filters this FList so only elements that satisfy given predicate remain
@@ -108,7 +128,13 @@ sealed trait FList[+A] {
    *
    * @return A new FList containing only elements that satisfy given predicate
    */
-  def filter(predicate: A => Boolean): FList[A] = ???
+  def filter(predicate: A => Boolean): FList[A] = 
+    this match {
+      case FNil => FNil
+      case FNonNil(head, tail) 
+      if predicate(head) => FNonNil(head, tail.filter(predicate))
+      case FNonNil(_, tail) => tail.filter(predicate)
+    }
 }
 
 /**
